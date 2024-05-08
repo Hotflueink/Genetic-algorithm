@@ -13,32 +13,26 @@ class NQuenne:
         for _ in range(popSize):
             self.population.append(np.random.random_integers(low=0, high=self.size-1, size=self.size))
         #print(self.population)
-        self.geneticAlgorithm()
     
     def geneticAlgorithm(self):
-        nextPopulation = []
-        solution = False
-        for i in range(len(self.population)-1):
-            parent1, parent2 = self.population[i], self.population[i+1]
-            child = self.reproduce(parent1, parent2)
-            if self.mutation > random.random():
-                child = self.mutate(child)
-            self.counter += 1
-            print(child, self.counter)
-            nextPopulation.append(child)
-        self.population = nextPopulation
-        for individual in self.population:
-            if self.fitness(individual) == 28:
-                solution = individual.tolist()
-                print('Solution found')
-                print(solution)
-                break
-        else:
+        while self.iterations:
+            nextPopulation = []
+            solution = None
+            for i in range(len(self.population)-1):
+                parent1, parent2 = self.population[i], self.population[i+1]
+                childs = self.reproduce(parent1, parent2)
+                for child in childs:
+                    if self.mutation > random.random():
+                        child = self.mutate(child)
+                    self.counter += 1
+                    print(child, self.counter, 'fitnes - ', self.fitness(child))
+                    nextPopulation.append(child)
+            self.population = nextPopulation
+            best_board = min(self.population, key=self.fitness)
+            if self.fitness(best_board) == 0:
+                solution = best_board
+                return solution
             self.iterations -= 1
-            if self.iterations == 0:
-                print('No solution')
-                return False
-            self.geneticAlgorithm()
         return solution
 
     def mutate(self, child):
@@ -48,7 +42,13 @@ class NQuenne:
 
     def reproduce(self, parent1, parent2):
         crossover = random.randint(1, self.size-1)
-        return (np.concatenate((np.array(parent1[0:crossover]), np.array(parent2[crossover:self.size]))))
+        return (np.concatenate((
+            np.array(parent1[0:crossover]), 
+            np.array(parent2[crossover:self.size])
+            )), np.concatenate((
+            np.array(parent2[0:crossover]), 
+            np.array(parent1[crossover:self.size])
+            )))
     
     def fitness(self, individual):
         # row = 0
@@ -61,12 +61,13 @@ class NQuenne:
             for j in range(i + 1, self.size):
                 if individual[i] == individual[j] or abs(individual[i] - individual[j]) == j - i:
                     conflicts += 1
-        return 28 - conflicts
+        return conflicts
 
 if __name__ == '__main__':
-    size = 8
-    iteration = 600
-    popSize = 250
-    mutation = 0.85
+    size = 10
+    iteration = 1000
+    popSize = 300
+    mutation = 0.35
     ans = NQuenne(size, iteration, popSize, mutation)
-    print(ans)
+    result = ans.geneticAlgorithm()
+    print(result, f'its answer for n queen, n = {size}')
