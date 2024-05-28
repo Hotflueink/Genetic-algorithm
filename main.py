@@ -18,8 +18,10 @@ class NQuenne:
         while self.iterations:
             nextPopulation = []
             solution = None
-            for i in range(len(self.population)-1):
-                parent1, parent2 = self.population[i], self.population[i+1]
+            fitness_value = [self.fitness(individual) for individual in self.population]
+            for _ in range(self.popSize):
+                selected_parent = random.choices(self.population, weights=fitness_value, k=2)
+                parent1, parent2 = selected_parent[0], selected_parent[1]
                 childs = self.reproduce(parent1, parent2)
                 for child in childs:
                     if self.mutation > random.random():
@@ -28,11 +30,11 @@ class NQuenne:
                     print(child, self.counter, 'fitnes - ', self.fitness(child))
                     nextPopulation.append(child)
             self.population = nextPopulation
-            best_board = min(self.population, key=self.fitness)
-            if self.fitness(best_board) == 0:
-                solution = best_board
-                return solution
             self.iterations -= 1
+            best_board = max(self.population, key=self.fitness)
+            if self.fitness(best_board) == 1:
+                solution = best_board
+                break
         return solution
 
     def mutate(self, child):
@@ -51,17 +53,12 @@ class NQuenne:
             )))
     
     def fitness(self, individual):
-        # row = 0
-        # currentBoard = self.board
-        # for column in individual:
-        #     currentBoard[row][column] = 1
-        #     row += 1
         conflicts = 0
         for i in range(self.size):
             for j in range(i + 1, self.size):
-                if individual[i] == individual[j] or abs(individual[i] - individual[j]) == j - i:
+                if individual[i] == individual[j] or abs(individual[i] - individual[j]) == abs(i - j):
                     conflicts += 1
-        return conflicts
+        return 1 / (conflicts + 1)
 
 if __name__ == '__main__':
     size = 10
